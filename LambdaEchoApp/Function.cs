@@ -1,16 +1,18 @@
-using Amazon.Lambda.Core;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+using Amazon.Lambda.Core;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
-namespace AWSLambda
+namespace LambdaEchoApp
 {
     public class Function
     {
-        
+
         /// <summary>
         /// A simple function that takes a string and does a ToUpper
         /// </summary>
@@ -21,14 +23,14 @@ namespace AWSLambda
         {
             try
             {
-                var body = $"Received `{input}` at {DateTime.UtcNow.TimeOfDay}. Context: {JsonConvert.SerializeObject(context)}";
+                var body = $"Runtime: {Environment.Version} - Received `{input}` at {DateTime.UtcNow.TimeOfDay}. Context: {JsonConvert.SerializeObject(context)}";
                 return new LambdaJsonResponse
                 {
                     statusCode = 200,
                     body = body
                 };
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new LambdaJsonResponse
                 {
@@ -44,7 +46,7 @@ namespace AWSLambda
             public string body { get; set; }
         }
 
-        public class LambdaJsonRequest: LambdaJson
+        public class LambdaJsonRequest : LambdaJson
         {
             public Dictionary<string, string> queryStringParameters { get; set; }
             public string requestContext { get; set; }
