@@ -1,9 +1,8 @@
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-using Amazon.Lambda.Core;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -19,43 +18,55 @@ namespace LambdaAuthoriser
         /// <param name="input"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public LambdaJsonResponse FunctionHandler(object input, ILambdaContext context)
+        public APIGatewayCustomAuthorizerResponse FunctionHandler(APIGatewayCustomAuthorizerRequest input, ILambdaContext context)
         {
             try
             {
-                var body = $"Runtime: {Environment.Version} - Received `{input}` at {DateTime.UtcNow.TimeOfDay}. Context: {JsonConvert.SerializeObject(context)}";
-                return new LambdaJsonResponse
+                var body = $"Runtime: {Environment.Version} - Received `{JsonConvert.SerializeObject(input)}` at {DateTime.UtcNow.TimeOfDay}. Context: {JsonConvert.SerializeObject(context)}";
+
+                Console.WriteLine(body);
+
+                var basicAuth = input?.AuthorizationToken;
+                if (string.IsNullOrWhiteSpace(basicAuth))
                 {
-                    statusCode = 200,
-                    body = body
+                    throw new Exception();
+                }
+
+                var authCtx = new APIGatewayCustomAuthorizerContextOutput();
+                authCtx["a"] = "context-a";
+                authCtx["b"] = "context-b";
+                authCtx["c"] = "context-c";
+
+                return new APIGatewayCustomAuthorizerResponse
+                {
+                    PrincipalID = "wuad",
+                    UsageIdentifierKey = Guid.NewGuid().ToString(),
+                    Context = authCtx,
+                    // related doc: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements.html
+                    PolicyDocument = new APIGatewayCustomAuthorizerPolicy
+                    {
+                        //Version = "0.0.1",
+                        Statement = new List<APIGatewayCustomAuthorizerPolicy.IAMPolicyStatement>
+                        {
+                            new APIGatewayCustomAuthorizerPolicy.IAMPolicyStatement
+                            {
+                                Action = new HashSet<string>{ "execute-api:Invoke" },
+                                Effect = basicAuth,
+                                Resource = new HashSet<string>{ input.MethodArn }
+                            }
+                        }
+                    }
                 };
             }
-            catch (Exception ex)
+            catch
             {
-                return new LambdaJsonResponse
-                {
-                    statusCode = 500,
-                    body = ex.ToString()
-                };
+                throw;
+                //return new APIGatewayCustomAuthorizerResponse
+                //{
+                //    StatusCode = 500,
+                //    Body = ex.ToString()
+                //};
             }
-        }
-
-        public class LambdaJson
-        {
-            public Dictionary<string, string> headers { get; set; }
-            public string body { get; set; }
-        }
-
-        public class LambdaJsonRequest : LambdaJson
-        {
-            public Dictionary<string, string> queryStringParameters { get; set; }
-            public string requestContext { get; set; }
-        }
-
-        public class LambdaJsonResponse : LambdaJson
-        {
-            public int statusCode { get; set; }
-            public bool isBase64Encoded { get; set; }
         }
     }
 }
