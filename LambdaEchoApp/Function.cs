@@ -1,6 +1,6 @@
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -28,7 +28,12 @@ public class Function
                 TimeSpan = DateTime.UtcNow.TimeOfDay
             };
 
-            var json = JsonConvert.SerializeObject(body, Formatting.Indented);
+            var serializeOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            };
+            var json = JsonSerializer.Serialize(body, serializeOptions);
             Console.WriteLine(json);
 
             return new APIGatewayProxyResponse
