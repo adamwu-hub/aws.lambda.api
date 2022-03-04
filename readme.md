@@ -17,16 +17,16 @@ This lambda function mock an authentication service, the passing in Authorizatio
 
 ### LambdaEchoApp
 
-This is a REST API lambda function, which uses the version 1.0 API contract. The function response contains all the request details, that is why it is called "echo" app. Create a API Gateway for REST API and link to this lambda function.
+This is a REST API lambda function, which uses the version 1.0 API contract. The function takes ver 1.0 request and put the entire request JSON into response so we can see exactly what data the function received from API G/W. Create a API Gateway for REST API and link to this lambda function.
 
 Also set the API Gateway authentication to use the `LambdaAuthoriser`.
 
-Make a call to the API Gateway and make sure the echo app response has the authentication result, such as the context array.
+Make a call to the API Gateway and make sure the echo app response has the authentication result, from `requestContext.authorizer` field.
 
 ### LambdaEchoHttpApp
 
-This is a HTTP API lambda function, which uses the version 2.0 API contract. Create a API Gateway for HTTP API and link to this lambda function.
+This app does same thing as `LambdaEchoApp`, but uses version 2.0 API contract. Create a API Gateway for HTTP API and link to this lambda function.
 
 Also set the API Gateway authentication to use the `LambdaAuthoriser`
 
-Make a call to the API Gateway and make sure the echo app request has the authentication result, such as the context array.
+Make a call to the API Gateway and make sure the echo app request has the authentication result, from `requestContext.authorizer` field.
